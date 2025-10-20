@@ -1,0 +1,10 @@
+# ---------- FireLens / Fluent Bit Router ----------
+FROM public.ecr.aws/aws-observability/aws-for-fluent-bit:latest
+
+# copy your configuration files into Fluent Bit’s etc folder
+COPY fluent-bit/fluent-bit.conf /fluent-bit/etc/fluent-bit.conf
+COPY fluent-bit/parsers.conf    /fluent-bit/etc/parsers.conf
+COPY fluent-bit/redact.lua      /fluent-bit/etc/redact.lua
+
+# optional: set default command
+CMD ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
