@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  fastapi:
+    image: tiangolo/uvicorn-gunicorn-fastapi:python3.10
+    working_dir: /app
+    volumes:
+      - ./fastapi:/app
+    environment:
+      - LOGGING_LEVEL=info
+    ports:
+      - "8080:80"
+    depends_on:
+      - fluentbit
+    entrypoint: ["sh", "-c", "sleep 5 && /start.sh"]
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: fastapi.local
+    networks:
+      - firelens-net # 👈 attach to the network
+
+  fluentbit:
+    image: public.ecr.aws/aws-observability/aws-for-fluent-bit:latest
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf
+      - ./fluent-bit/redact.lua:/fluent-bit/etc/redact.lua
+    ports:
+      - "24224:24224"
+    command:
+      ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
+    networks:
+      - firelens-net # 👈 attach to the same network
+
+# 👇 this must be at the very bottom, not indented under services
+networks:
+  firelens-net:
+    driver: bridge
